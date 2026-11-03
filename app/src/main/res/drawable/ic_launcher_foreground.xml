@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Glowing outer shield rim in safe zone -->
+    <path
+        android:fillColor="#00E5BC"
+        android:pathData="M54,28 L34,36 C34,54 42,70 54,78 C66,70 74,54 74,36 Z"/>
+    <!-- Inner OLED cutout -->
+    <path
+        android:fillColor="#0A0E14"
+        android:pathData="M54,32 L38,38.5 C38,53 44.5,66 54,73 C63.5,66 70,53 70,38.5 Z"/>
+    <!-- Central lotus / focus flame in electric teal -->
+    <path
+        android:fillColor="#00E5BC"
+        android:pathData="M54,42 C51,48 46,51 46,57 C46,62 49.5,65 54,65 C58.5,65 62,62 62,57 C62,51 57,48 54,42 Z"/>
+    <!-- Focus spark center -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,54 C52.5,54 51.5,55 51.5,56.5 C51.5,58 52.5,59 54,59 C55.5,59 56.5,58 56.5,56.5 C56.5,55 55.5,54 54,54 Z"/>
+</vector>

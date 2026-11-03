@@ -1,0 +1,6 @@
+{
+  "name": "FocusFlow",
+  "description": "Mindful digital detox and anti-addiction engine with surgical section blocking, strict AI accountability pings, and focus timers.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">FocusFlow</string>
+    <string name="accessibility_service_description">Detects short-form scrolling rabbit holes like Instagram Reels and YouTube Shorts to help you stay mindful and preserve your streak.</string>
+</resources>

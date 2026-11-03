@@ -1,0 +1,94 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with streak count, productivity score, and aggregate screen time stats.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Authenticated user UID" },
+        "displayName": { "type": "string", "description": "Display name of the user" },
+        "currentStreak": { "type": "integer", "description": "Current consecutive active streak in days" },
+        "bestStreak": { "type": "integer", "description": "Best achieved streak in days" },
+        "totalScreenMinutesSaved": { "type": "integer", "description": "Estimated minutes saved from interventions" },
+        "todayProductivityScore": { "type": "integer", "description": "Daily productivity score from 0 to 100" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of profile creation" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last profile update" }
+      },
+      "required": ["userId", "displayName", "currentStreak", "bestStreak", "totalScreenMinutesSaved", "todayProductivityScore", "createdAt", "updatedAt"]
+    },
+    "AppLimit": {
+      "title": "AppLimit",
+      "description": "App-specific usage limits and granular section blocking rules (Reels, Shorts).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Document ID" },
+        "userId": { "type": "string", "description": "Owner user UID" },
+        "packageName": { "type": "string", "description": "Package name of target application" },
+        "appName": { "type": "string", "description": "Friendly app display name" },
+        "dailyBudgetMinutes": { "type": "integer", "description": "Daily quota in minutes" },
+        "blockReels": { "type": "boolean", "description": "Block Instagram Reels section" },
+        "blockShorts": { "type": "boolean", "description": "Block YouTube Shorts section" },
+        "isBlocked": { "type": "boolean", "description": "Hard block state" },
+        "cooldownSeconds": { "type": "integer", "description": "Grace period countdown in seconds" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp when rule created" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp when rule updated" }
+      },
+      "required": ["userId", "packageName", "appName", "dailyBudgetMinutes", "blockReels", "blockShorts", "isBlocked", "cooldownSeconds", "createdAt", "updatedAt"]
+    },
+    "DailyLog": {
+      "title": "DailyLog",
+      "description": "Daily usage summary, intercepted scrolling attempts, and focus stats.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Document ID (typically YYYY-MM-DD)" },
+        "userId": { "type": "string", "description": "Owner user UID" },
+        "date": { "type": "string", "description": "Date string format YYYY-MM-DD" },
+        "totalScreenMinutes": { "type": "integer", "description": "Total device screen time today" },
+        "focusMinutes": { "type": "integer", "description": "Total Pomodoro/focus mode minutes" },
+        "distractedMinutes": { "type": "integer", "description": "Minutes spent in restricted apps" },
+        "productivityScore": { "type": "integer", "description": "Score from 0 to 100" },
+        "reelsInterceptCount": { "type": "integer", "description": "Number of Reels interventions" },
+        "shortsInterceptCount": { "type": "integer", "description": "Number of Shorts interventions" },
+        "emergencyBypassCount": { "type": "integer", "description": "Number of emergency bypass activations" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Update timestamp" }
+      },
+      "required": ["userId", "date", "totalScreenMinutes", "focusMinutes", "distractedMinutes", "productivityScore", "reelsInterceptCount", "shortsInterceptCount", "emergencyBypassCount", "createdAt", "updatedAt"]
+    },
+    "MilestoneBadge": {
+      "title": "MilestoneBadge",
+      "description": "Achievement badges earned for streak and focus milestones.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Document ID" },
+        "userId": { "type": "string", "description": "Owner user UID" },
+        "badgeId": { "type": "string", "description": "Static identifier for the badge" },
+        "title": { "type": "string", "description": "Badge title" },
+        "description": { "type": "string", "description": "Condition or accomplishment description" },
+        "iconName": { "type": "string", "description": "Vector icon name identifier" },
+        "category": { "type": "string", "description": "Streak, Focus, or Intercept category" },
+        "unlocked": { "type": "boolean", "description": "Whether badge is unlocked" },
+        "unlockedAt": { "type": "string", "format": "date-time", "description": "Unlock timestamp" }
+      },
+      "required": ["userId", "badgeId", "title", "description", "iconName", "category", "unlocked"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Stores user digital detox profile and streak info."
+    },
+    "/users/{userId}/app_limits/{limitId}": {
+      "schema": "AppLimit",
+      "description": "Stores user app limits and section blocking configuration."
+    },
+    "/users/{userId}/daily_logs/{logId}": {
+      "schema": "DailyLog",
+      "description": "Stores daily usage statistics and intervention counts."
+    },
+    "/users/{userId}/milestones/{milestoneId}": {
+      "schema": "MilestoneBadge",
+      "description": "Stores user unlocked achievement badges."
+    }
+  }
+}

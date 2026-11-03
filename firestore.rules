@@ -1,0 +1,162 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.displayName is string && data.displayName.size() <= 100 &&
+             data.currentStreak is int && data.currentStreak >= 0 &&
+             data.bestStreak is int && data.bestStreak >= 0 &&
+             data.totalScreenMinutesSaved is int && data.totalScreenMinutesSaved >= 0 &&
+             data.todayProductivityScore is int && data.todayProductivityScore >= 0 && data.todayProductivityScore <= 100 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidAppLimit(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.packageName is string && data.packageName.size() > 0 && data.packageName.size() <= 150 &&
+             data.appName is string && data.appName.size() > 0 && data.appName.size() <= 100 &&
+             data.dailyBudgetMinutes is int && data.dailyBudgetMinutes >= 0 && data.dailyBudgetMinutes <= 1440 &&
+             data.blockReels is bool &&
+             data.blockShorts is bool &&
+             data.isBlocked is bool &&
+             data.cooldownSeconds is int && data.cooldownSeconds >= 0 && data.cooldownSeconds <= 300 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidDailyLog(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.date is string && data.date.size() == 10 && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
+             data.totalScreenMinutes is int && data.totalScreenMinutes >= 0 &&
+             data.focusMinutes is int && data.focusMinutes >= 0 &&
+             data.distractedMinutes is int && data.distractedMinutes >= 0 &&
+             data.productivityScore is int && data.productivityScore >= 0 && data.productivityScore <= 100 &&
+             data.reelsInterceptCount is int && data.reelsInterceptCount >= 0 &&
+             data.shortsInterceptCount is int && data.shortsInterceptCount >= 0 &&
+             data.emergencyBypassCount is int && data.emergencyBypassCount >= 0 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidMilestoneBadge(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.badgeId is string && data.badgeId.size() > 0 && data.badgeId.size() <= 64 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
+             data.description is string && data.description.size() <= 300 &&
+             data.iconName is string && data.iconName.size() <= 50 &&
+             data.category is string && data.category.size() <= 50 &&
+             data.unlocked is bool &&
+             (!('unlockedAt' in data) || data.unlockedAt == null || (data.unlockedAt is timestamp && data.unlockedAt <= request.time));
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().userId == userId &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'currentStreak', 'bestStreak', 'totalScreenMinutesSaved', 'todayProductivityScore', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'currentStreak', 'bestStreak', 'totalScreenMinutesSaved', 'todayProductivityScore', 'createdAt', 'updatedAt']) &&
+                       isValidUserProfile(incoming());
+
+      allow update: if isOwner(userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'currentStreak', 'bestStreak', 'totalScreenMinutesSaved', 'todayProductivityScore', 'createdAt', 'updatedAt']) &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'currentStreak', 'bestStreak', 'totalScreenMinutesSaved', 'todayProductivityScore', 'updatedAt']);
+
+      allow delete: if isOwner(userId);
+
+      match /app_limits/{limitId} {
+        allow get, list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(limitId) &&
+                         incoming().userId == userId &&
+                         incoming().keys().hasAll(['userId', 'packageName', 'appName', 'dailyBudgetMinutes', 'blockReels', 'blockShorts', 'isBlocked', 'cooldownSeconds', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['id', 'userId', 'packageName', 'appName', 'dailyBudgetMinutes', 'blockReels', 'blockShorts', 'isBlocked', 'cooldownSeconds', 'createdAt', 'updatedAt']) &&
+                         isValidAppLimit(incoming());
+
+        allow update: if isOwner(userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().packageName == existing().packageName &&
+                         incoming().keys().hasOnly(['id', 'userId', 'packageName', 'appName', 'dailyBudgetMinutes', 'blockReels', 'blockShorts', 'isBlocked', 'cooldownSeconds', 'createdAt', 'updatedAt']) &&
+                         isValidAppLimit(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['id', 'appName', 'dailyBudgetMinutes', 'blockReels', 'blockShorts', 'isBlocked', 'cooldownSeconds', 'updatedAt']);
+
+        allow delete: if isOwner(userId);
+      }
+
+      match /daily_logs/{logId} {
+        allow get, list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(logId) &&
+                         incoming().userId == userId &&
+                         incoming().keys().hasAll(['userId', 'date', 'totalScreenMinutes', 'focusMinutes', 'distractedMinutes', 'productivityScore', 'reelsInterceptCount', 'shortsInterceptCount', 'emergencyBypassCount', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['id', 'userId', 'date', 'totalScreenMinutes', 'focusMinutes', 'distractedMinutes', 'productivityScore', 'reelsInterceptCount', 'shortsInterceptCount', 'emergencyBypassCount', 'createdAt', 'updatedAt']) &&
+                         isValidDailyLog(incoming());
+
+        allow update: if isOwner(userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().date == existing().date &&
+                         incoming().keys().hasOnly(['id', 'userId', 'date', 'totalScreenMinutes', 'focusMinutes', 'distractedMinutes', 'productivityScore', 'reelsInterceptCount', 'shortsInterceptCount', 'emergencyBypassCount', 'createdAt', 'updatedAt']) &&
+                         isValidDailyLog(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['id', 'totalScreenMinutes', 'focusMinutes', 'distractedMinutes', 'productivityScore', 'reelsInterceptCount', 'shortsInterceptCount', 'emergencyBypassCount', 'updatedAt']);
+
+        allow delete: if isOwner(userId);
+      }
+
+      match /milestones/{milestoneId} {
+        allow get, list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(milestoneId) &&
+                         incoming().userId == userId &&
+                         incoming().keys().hasAll(['userId', 'badgeId', 'title', 'description', 'iconName', 'category', 'unlocked']) &&
+                         incoming().keys().hasOnly(['id', 'userId', 'badgeId', 'title', 'description', 'iconName', 'category', 'unlocked', 'unlockedAt']) &&
+                         isValidMilestoneBadge(incoming());
+
+        allow update: if isOwner(userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().badgeId == existing().badgeId &&
+                         incoming().keys().hasOnly(['id', 'userId', 'badgeId', 'title', 'description', 'iconName', 'category', 'unlocked', 'unlockedAt']) &&
+                         isValidMilestoneBadge(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['id', 'unlocked', 'unlockedAt']);
+
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}
